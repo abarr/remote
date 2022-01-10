@@ -9,4 +9,8 @@ defmodule Remote.UserServerTest do
   test "get state", %{user_server: user_server} do
     assert %{max_number: _num, timestamp: nil} = Remote.Users.UserServer.get_state(user_server)
   end
+
+  test "update users table", %{user_server: user_server} do
+    assert %{max_number: _num, timestamp: nil} = Remote.Users.UserServer.get_state(user_server)
+  end
 end

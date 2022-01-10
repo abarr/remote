@@ -2,7 +2,14 @@ defmodule Remote.Users.UserServer do
   @moduledoc false
   use GenServer
 
+  import Ecto.Query, warn: false
+  alias Remote.Repo
+
+  # alias Remote.Users.User
+
   @update_interval Application.get_env(:remote, :update_interval) || 60_000
+  @max 100
+  @min 0
 
   def start_link(name: name) do
     GenServer.start_link(__MODULE__, nil, name: name)
@@ -29,8 +36,22 @@ defmodule Remote.Users.UserServer do
 
   @impl true
   def handle_info(:update_user_points, state) do
-    time = DateTime.utc_now() |> DateTime.to_time()
-    state.max_number |> IO.inspect(label: "#{time} - Updating points, current max_number: ")
+    with num_rows <- Repo.one(from u in "users", select: count(u.id)),
+         {:ok, %{num_rows: rows}} when rows == num_rows <-
+           Ecto.Adapters.SQL.query(
+             Repo,
+             """
+             UPDATE users
+             SET
+              points = floor(random() * (#{@max} - #{@min})) + #{@min},
+              updated_at = now() at time zone 'utc';
+             """
+           ) do
+      IO.puts("Number of rows updated: #{num_rows}")
+    else
+      _ -> raise "User points update failed!"
+    end
+
     schedule_update(@update_interval)
     {:noreply, %{state | max_number: Enum.random(0..100)}}
   end
