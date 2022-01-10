@@ -12,10 +12,19 @@ defmodule Remote.Users.UserServer do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
+  def get_state(server \\ __MODULE__) do
+    GenServer.call(server, {:get_state})
+  end
+
   @impl true
   def init(_) do
     schedule_update(@update_interval)
     {:ok, %{max_number: Enum.random(0..100), timestamp: nil}}
+  end
+
+  @impl true
+  def handle_call({:get_state}, _from, state) do
+    {:reply, state, state}
   end
 
   @impl true
