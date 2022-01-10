@@ -8,15 +8,15 @@
 import Config
 
 config :remote,
-  ecto_repos: [Remote.Repo]
+  ecto_repos: [Remote.Repo],
+  migration_timestamps: [type: :utc_datetime],
+  update_interval: 60_000
 
 # Configures the endpoint
 config :remote, RemoteWeb.Endpoint,
   url: [host: "localhost"],
-  migration_timestamps: [type: :utc_datetime_usec],
   render_errors: [view: RemoteWeb.ErrorView, accepts: ~w(json), layout: false],
-  pubsub_server: Remote.PubSub,
-  live_view: [signing_salt: "KnXEEIFX"]
+  pubsub_server: Remote.PubSub
 
 # Configures Elixir's Logger
 config :logger, :console,

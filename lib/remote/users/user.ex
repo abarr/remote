@@ -2,7 +2,7 @@ defmodule Remote.Users.User do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @timestamps_opts [type: :utc_datetime_usec]
+  @timestamps_opts [type: :utc_datetime]
 
   schema "users" do
     field :points, :integer

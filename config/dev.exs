@@ -1,5 +1,8 @@
 import Config
 
+# config :remote,
+#   update_interval: 10_000 # Set 10 seconds for Dev
+
 # Configure your database
 config :remote, Remote.Repo,
   username: "postgres",

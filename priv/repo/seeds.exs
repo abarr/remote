@@ -1,4 +1,3 @@
-
 # Generate 1,000,000 rows in the User table using raw SQL
 # defaulting the points column to 0
 Ecto.Adapters.SQL.query!(
