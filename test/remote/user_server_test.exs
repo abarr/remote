@@ -27,12 +27,13 @@ defmodule Remote.UserServerTest do
                GenServer.call(user_server, :get_state)
     end
 
-    test "get users limited by configuration and greater than max_number", %{
-      user_server: user_server
-    } do
-      {%{max_number: max_number}, _} = GenServer.call(user_server, :get_state)
+    test "get users limited by configuration and greater than max_number" do
+      {:ok, server} =
+        Remote.Users.UserServer.start_link(name: :timer_test, update_interval: 1_000)
 
-      %{users: users} = GenServer.call(user_server, :get_users_points_greater_than_max)
+      {%{max_number: max_number}, _} = GenServer.call(server, :get_state)
+
+      %{users: users} = GenServer.call(server, :get_users_points_greater_than_max)
 
       assert Enum.count(users) == @limit
 
@@ -47,7 +48,7 @@ defmodule Remote.UserServerTest do
 
       {%{max_number: max_number}, _} = GenServer.call(server, :get_state)
 
-      :timer.sleep(1_500)
+      :timer.sleep(1_000)
 
       {%{max_number: new_max_number}, _} = GenServer.call(server, :get_state)
 
