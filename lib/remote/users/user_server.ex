@@ -6,9 +6,9 @@ defmodule Remote.Users.UserServer do
   require Logger
 
   @update_interval Application.get_env(:remote, :update_interval) || 60_000
-  @max_num_range Application.get_env(:remote, :update_interval) || 100
-  @min_num_range Application.get_env(:remote, :update_interval) || 0
-  @users_returned_limit Application.get_env(:remote, :limit) || 2
+  @max_num_range Application.get_env(:remote, :max_num_range) || 100
+  @min_num_range Application.get_env(:remote, :min_num_range) || 0
+  @users_returned_limit Application.get_env(:remote, :users_returned_limit) || 2
 
   #  This GenServer starts with the following state:
   #   {
@@ -82,15 +82,14 @@ defmodule Remote.Users.UserServer do
   #  Based on the update_interval the server will update the points value for all users to a random integer
   #  between the min and max range defined in the configuration (The second value in the state tuple).
   def handle_info(:update_user_points, {state, config}) do
-    with num_rows <- BuildQuery.get_table_row_count(),
-         {:ok, %{num_rows: rows}} when rows == num_rows <-
-           BuildQuery.update_all_users_points(config.max_num_range, config.min_num_range) do
-      Logger.info("User rows updated with new random points value: #{num_rows}")
-      schedule_update(config.update_interval)
-      {:noreply, {%{state | max_number: Enum.random(0..100)}, config}}
-    else
-      _ ->
-        Logger.error("User points update failed!")
+    case BuildQuery.update_all_users_points(config.max_num_range, config.min_num_range) do
+      :ok ->
+        Logger.info("User rows updated with new random points value")
+        schedule_update(config.update_interval)
+        {:noreply, {%{state | max_number: Enum.random(0..100)}, config}}
+
+      error ->
+        Logger.error("User points update failed! - #{error}")
         raise "User points update failed!"
     end
   end

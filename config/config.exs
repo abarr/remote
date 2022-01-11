@@ -9,7 +9,8 @@ import Config
 
 config :remote,
   ecto_repos: [Remote.Repo],
-  migration_timestamps: [type: :utc_datetime]
+  migration_timestamps: [type: :utc_datetime],
+  update_interval: 10_000
 
 # Configures the endpoint
 config :remote, RemoteWeb.Endpoint,

@@ -12,15 +12,9 @@ defmodule Remote.Users.BuildQuery do
   end
 
   def update_all_users_points(max, min) do
-    Ecto.Adapters.SQL.query(
-      Repo,
-      """
-      UPDATE users
-      SET
-      points = floor(random() * (#{max} - #{min})) + #{min},
-      updated_at = now() at time zone 'utc';
-      """
-    )
+    Enum.each(update_sql(min, max), fn sql ->
+      Ecto.Adapters.SQL.query(Repo, sql)
+    end)
   end
 
   def get_table_row_count() do
@@ -51,5 +45,20 @@ defmodule Remote.Users.BuildQuery do
   defp get_count(query) do
     from q in query,
       select: count(q.id)
+  end
+
+  defp update_sql(min, max) do
+    [
+      """
+      CREATE TABLE updated_users (id, points, inserted_at, updated_at) AS
+	      SELECT id, cast(floor(random() * (#{max} - #{min})) + #{min} AS integer) , inserted_at, now() at time zone 'utc' FROM users;
+      """,
+      """
+      DROP TABLE users;
+      """,
+      """
+      ALTER TABLE updated_users RENAME TO users;
+      """
+    ]
   end
 end
