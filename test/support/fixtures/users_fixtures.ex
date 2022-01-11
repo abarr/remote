@@ -4,17 +4,14 @@ defmodule Remote.UsersFixtures do
   entities via the `Remote.Users` context.
   """
 
-  @doc """
-  Generate a user.
-  """
-  def user_fixture(attrs \\ %{}) do
-    {:ok, user} =
-      attrs
-      |> Enum.into(%{
-        points: 42
-      })
-      |> Remote.Users.create_user()
-
-    user
+  def seed_users(number, max, min) do
+    Ecto.Adapters.SQL.query!(
+      Remote.Repo,
+      """
+      INSERT INTO users (points, inserted_at, updated_at)
+      SELECT floor(random() * (#{max} - #{min})) + #{min}, now() at time zone 'utc', now() at time zone 'utc'
+      FROM generate_series(1, #{number});
+      """
+    )
   end
 end

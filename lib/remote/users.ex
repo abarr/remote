@@ -3,102 +3,26 @@ defmodule Remote.Users do
   The Users context.
   """
 
-  import Ecto.Query, warn: false
-  alias Remote.Repo
-
-  alias Remote.Users.User
-
   @doc """
-  Returns the list of users.
+  Returns a map with a list of users that have points greater than the
+  max_number value held in system state (See Remote.Users.UserServer).
+
+  The results is limited to a configurable value that defaults to 2
+  (See Remote.Users.UserServer).
+
+  A timestamp is included in the map that is the utc_datetime of the last
+  call made to the server.
 
   ## Examples
 
       iex> list_users()
-      [%User{}, ...]
+      %{
+        users: [%{id: 1, points: 56}, ...],
+        timestamp: ~U[2022-01-11 05:01:00.763516Z]
+      }
 
   """
-  def list_users do
-    Repo.all(User)
-  end
-
-  @doc """
-  Gets a single user.
-
-  Raises `Ecto.NoResultsError` if the User does not exist.
-
-  ## Examples
-
-      iex> get_user!(123)
-      %User{}
-
-      iex> get_user!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_user!(id), do: Repo.get!(User, id)
-
-  @doc """
-  Creates a user.
-
-  ## Examples
-
-      iex> create_user(%{field: value})
-      {:ok, %User{}}
-
-      iex> create_user(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_user(attrs \\ %{}) do
-    %User{}
-    |> User.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Updates a user.
-
-  ## Examples
-
-      iex> update_user(user, %{field: new_value})
-      {:ok, %User{}}
-
-      iex> update_user(user, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_user(%User{} = user, attrs) do
-    user
-    |> User.changeset(attrs)
-    |> Repo.update()
-  end
-
-  @doc """
-  Deletes a user.
-
-  ## Examples
-
-      iex> delete_user(user)
-      {:ok, %User{}}
-
-      iex> delete_user(user)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_user(%User{} = user) do
-    Repo.delete(user)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking user changes.
-
-  ## Examples
-
-      iex> change_user(user)
-      %Ecto.Changeset{data: %User{}}
-
-  """
-  def change_user(%User{} = user, attrs \\ %{}) do
-    User.changeset(user, attrs)
+  def list_users(server \\ Remote.Users.UserServer) do
+    GenServer.call(server, :get_users_points_greater_than_max)
   end
 end
