@@ -5,8 +5,10 @@ defmodule RemoteWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/api", RemoteWeb do
+  scope "/", RemoteWeb do
     pipe_through :api
+
+    get "/", UserController, :index
   end
 
   # Enables LiveDashboard only for development

@@ -16,7 +16,8 @@ config :remote,
 config :remote, RemoteWeb.Endpoint,
   url: [host: "localhost"],
   render_errors: [view: RemoteWeb.ErrorView, accepts: ~w(json), layout: false],
-  pubsub_server: Remote.PubSub
+  pubsub_server: Remote.PubSub,
+  live_view: [signing_salt: "FslZr7qikzBEawDE"]
 
 # Configures Elixir's Logger
 config :logger, :console,
