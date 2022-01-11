@@ -8,34 +8,28 @@ defmodule Remote.Users.UserServer do
   # alias Remote.Users.User
 
   @update_interval Application.get_env(:remote, :update_interval) || 60_000
-  @max 100
-  @min 0
+  @max Application.get_env(:remote, :update_interval) || 100
+  @min Application.get_env(:remote, :update_interval) || 0
 
-  def start_link(name: name) do
-    GenServer.start_link(__MODULE__, nil, name: name)
-  end
-
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
-  end
-
-  def get_state(server \\ __MODULE__) do
-    GenServer.call(server, {:get_state})
+  def start_link(opts) do
+    name = Access.get(opts, :name, __MODULE__)
+    update_interval = Access.get(opts, :update_interval, @update_interval)
+    GenServer.start_link(__MODULE__, %{update_interval: update_interval}, name: name)
   end
 
   @impl true
-  def init(_) do
-    schedule_update(@update_interval)
-    {:ok, %{max_number: Enum.random(0..100), timestamp: nil}}
+  def init(config) do
+    schedule_update(config.update_interval)
+    {:ok, {%{max_number: Enum.random(0..100), timestamp: nil}, config}}
   end
 
   @impl true
-  def handle_call({:get_state}, _from, state) do
+  def handle_call(:get_state, _from, state) do
     {:reply, state, state}
   end
 
   @impl true
-  def handle_info(:update_user_points, state) do
+  def handle_info(:update_user_points, {state, config}) do
     with num_rows <- Repo.one(from u in "users", select: count(u.id)),
          {:ok, %{num_rows: rows}} when rows == num_rows <-
            Ecto.Adapters.SQL.query(
@@ -52,8 +46,8 @@ defmodule Remote.Users.UserServer do
       _ -> raise "User points update failed!"
     end
 
-    schedule_update(@update_interval)
-    {:noreply, %{state | max_number: Enum.random(0..100)}}
+    schedule_update(config.update_interval)
+    {:noreply, {%{state | max_number: Enum.random(0..100)}, config}}
   end
 
   # set timer
