@@ -5,4 +5,13 @@ defmodule RemoteWeb.ErrorView do
   def render("error.json", %{msg: msg}) do
     %{error: msg}
   end
+
+  def render("500.json", _) do
+    %{errors: "Internal Server Error"}
+  end
+
+  def render("404.json", _) do
+    %{errors: "Not Found"}
+  end
+
 end

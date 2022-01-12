@@ -1,6 +1,6 @@
 defmodule Remote.UserServerTest do
-  use ExUnit.Case, async: true
-  use Remote.DataCase, async: true
+  use ExUnit.Case, async: false
+  use Remote.DataCase, async: false
 
   import Remote.UsersFixtures
 
@@ -12,6 +12,7 @@ defmodule Remote.UserServerTest do
     @min 0
 
     setup do
+
       {:ok, user_server} =
         start_supervised({
           Remote.Users.UserServer,
@@ -33,7 +34,7 @@ defmodule Remote.UserServerTest do
 
       {%{max_number: max_number}, _} = GenServer.call(server, :get_state)
 
-      %{users: users} = GenServer.call(server, :get_users_points_greater_than_max)
+      {:ok, %{users: users}} = GenServer.call(server, :get_users_points_greater_than_max)
 
       assert Enum.count(users) == @limit
 
