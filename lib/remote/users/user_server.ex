@@ -73,8 +73,6 @@ defmodule Remote.Users.UserServer do
         {state.max_number, config.users_returned_limit}
       )
 
-    Logger.info("Remote.Users.UserServer :max_number updated and Users returned")
-
     {:reply, result, {%{state | timestamp: DateTime.utc_now()}, config}}
   end
 
@@ -101,9 +99,12 @@ defmodule Remote.Users.UserServer do
 
   # build results in common format
   defp build_results(result_name, timestamp, func, args) when is_atom(result_name) do
-    %{
-      result_name => func.(args),
-      timestamp: timestamp
-    }
+    case func.(args) do
+      users when is_list(users) ->
+        {:ok, %{result_name => users, timestamp: timestamp}}
+
+      _ ->
+        {:error, "User query failed!"}
+    end
   end
 end

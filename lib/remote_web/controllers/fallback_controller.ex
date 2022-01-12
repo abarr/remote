@@ -8,6 +8,6 @@ defmodule RemoteWeb.FallbackController do
     conn
     |> put_status(:error)
     |> put_view(RemoteAWeb.ErrorView)
-    |> render("error.json", status: :error, message: msg)
+    |> render("error.json", msg: msg)
   end
 end
