@@ -3,7 +3,7 @@ defmodule Remote.Users.BuildQuery do
   import Ecto.Query, warn: false
   alias Remote.Repo
 
-  def list_by_points_greater_than_with_limit({points, limit}) do
+  def list_users_by(points, limit) do
     all("users")
     |> with_points_greater_than(points)
     |> with_limit(limit)

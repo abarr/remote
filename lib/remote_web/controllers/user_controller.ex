@@ -18,7 +18,7 @@ defmodule RemoteWeb.UserController do
 
   """
   def index(conn, _params) do
-    {:ok, payload} = Users.list_users()
+    {:ok, payload} = Users.list_users() |> IO.inspect(label: "21")
     render(conn, "index.json", payload: payload)
   end
 end

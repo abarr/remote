@@ -28,7 +28,6 @@ defmodule RemoteWeb.UserApiTest do
 
     test "test that the timestamp is not nil", %{conn: conn} do
       conn = get(conn, Routes.user_path(conn, :index))
-
       assert json_response(conn, 200)["timestamp"] != nil
     end
 

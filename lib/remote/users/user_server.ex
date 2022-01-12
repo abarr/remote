@@ -23,12 +23,13 @@ defmodule Remote.Users.UserServer do
   #  GenServer starts with the following state:
   #  {
   #   %{max_number: 23,timestamp: nil},
-  #   %{update_interval: 60_000, max_num_range: 100, min_num_range: 0, users_returned_limit: 2}
+  #   %{update_interval: 60_000, max_num_range: 100, min_num_range: 0, users_returned_limit: 2},
+  #   [%{id: 1, points: 67}, ...] - This is a cache of the last clean query
   #  }
   @impl true
   def init(config) do
     schedule_update(config.update_interval)
-    {:ok, {%{max_number: Enum.random(0..100), timestamp: nil}, config}}
+    {:ok, {%{max_number: Enum.random(0..100), timestamp: nil}, config, []}}
   end
 
   @impl true
@@ -36,37 +37,28 @@ defmodule Remote.Users.UserServer do
     {:reply, state, state}
   end
 
-  # Returns a map that includes a list of users (limited to the number held in configuration)
-  # and with points greater than :max_number.
-  #
-  # The result includes the timestamp value set prior to
-  # it being updated for each call.
-  #
-  #  %{
-  #    users: [%{id: 1, points: 67}, %{id: 13, points: 95}],
-  #    timestamp: ~U[2022-01-11 05:01:00.763516Z]
-  #  }
-  #
-  def handle_call(:get_users_points_greater_than_max, _from, {state, config}) do
-    result =
-      build_results(
-        :users,
-        state.timestamp,
-        &BuildQuery.list_by_points_greater_than_with_limit/1,
-        {state.max_number, config.users_returned_limit}
-      )
+  def handle_call(:get_users_points_greater_than_max, _from, {state, config, :empty}) do
+    max_num = state.max_number
+    limit = config.users_returned_limit
+    users = BuildQuery.list_users_by(max_num, limit)
+    result = {:ok, %{users: users, timestamp: state.timestamp}}
 
-    {:reply, result, {%{state | timestamp: DateTime.utc_now()}, config}}
+    {:reply, result, {%{state | timestamp: DateTime.utc_now()}, config, users}}
+  end
+
+  def handle_call(:get_users_points_greater_than_max, _from, {state, config, user_cache}) do
+    result = {:ok, %{ users: user_cache, timestamp: state.timestamp}}
+    {:reply, result, {%{state | timestamp: DateTime.utc_now()}, config, user_cache}}
   end
 
   #  Based on the update_interval the server will update the points value for all users to a random integer
   #  between the min and max range defined in the configuration (The second value in the state tuple).
   @impl true
-  def handle_info(:update_user_points, {state, config}) do
+  def handle_info(:update_user_points, {state, config, _}) do
     case BuildQuery.update_all_users_points(config.max_num_range, config.min_num_range) do
       :ok ->
         schedule_update(config.update_interval)
-        {:noreply, {%{state | max_number: Enum.random(0..100)}, config}}
+        {:noreply, {%{state | max_number: Enum.random(0..100)}, config, :empty}}
 
       _error ->
         raise "User points update failed!"
@@ -76,17 +68,6 @@ defmodule Remote.Users.UserServer do
   # set timer
   defp schedule_update(interval) do
     Process.send_after(self(), :update_user_points, interval)
-  end
-
-  # build results in common format
-  defp build_results(result_name, timestamp, func, args) when is_atom(result_name) do
-    case func.(args) do
-      users when is_list(users) ->
-        {:ok, %{result_name => users, timestamp: timestamp}}
-
-      _ ->
-        {:error, "User query failed!"}
-    end
   end
 
   # create the config to be stored in state
