@@ -65,12 +65,10 @@ defmodule Remote.Users.UserServer do
   def handle_info(:update_user_points, {state, config}) do
     case BuildQuery.update_all_users_points(config.max_num_range, config.min_num_range) do
       :ok ->
-        Logger.info("User rows updated with new random points value")
         schedule_update(config.update_interval)
         {:noreply, {%{state | max_number: Enum.random(0..100)}, config}}
 
-      error ->
-        Logger.error("User points update failed! - #{error}")
+      _error ->
         raise "User points update failed!"
     end
   end
