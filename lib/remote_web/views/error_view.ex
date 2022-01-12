@@ -1,5 +1,5 @@
 defmodule RemoteWeb.ErrorView do
-   @moduledoc false
+  @moduledoc false
   use RemoteWeb, :view
 
   def render("error.json", %{msg: msg}) do
@@ -13,5 +13,4 @@ defmodule RemoteWeb.ErrorView do
   def render("404.json", _) do
     %{errors: "Not Found"}
   end
-
 end

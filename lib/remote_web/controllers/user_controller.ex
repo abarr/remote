@@ -21,5 +21,4 @@ defmodule RemoteWeb.UserController do
     {:ok, payload} = Users.list_users()
     render(conn, "index.json", payload: payload)
   end
-
 end

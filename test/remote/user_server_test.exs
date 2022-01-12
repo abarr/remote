@@ -12,7 +12,6 @@ defmodule Remote.UserServerTest do
     @min 0
 
     setup do
-
       {:ok, user_server} =
         start_supervised({
           Remote.Users.UserServer,

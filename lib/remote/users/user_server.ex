@@ -5,20 +5,13 @@ defmodule Remote.Users.UserServer do
   alias Remote.Users.BuildQuery
   require Logger
 
-  #  This GenServer starts with the following state:
-  #   {
-  #     %{
-  #       max_number: #Random number bewteen the configurabe values - defaults to 0-100},
-  #       timestamp: nil
-  #     },
-  #     %{
-  #       update_interval: he time set for calling schedule_update/1
-  #       max_num_range: The max number in the range for generating random numbers
-  #       min_num_range: The min number in the range for generating random numbers
-  #       users_returned_limit: sets the limit for the number of users to return - defaults to 2
-  #     }
-  #   }
-  #
+  # Default values if none exist in configuration
+  @update_interval 60_000
+  @max_num_range 100
+  @min_num_range 0
+  @users_returned_limit 2
+
+  # Initialise Genserver
   def start_link(opts) do
     GenServer.start_link(
       __MODULE__,
@@ -27,6 +20,11 @@ defmodule Remote.Users.UserServer do
     )
   end
 
+  #  GenServer starts with the following state:
+  #  {
+  #   %{max_number: 23,timestamp: nil},
+  #   %{update_interval: 60_000, max_num_range: 100, min_num_range: 0, users_returned_limit: 2}
+  #  }
   @impl true
   def init(config) do
     schedule_update(config.update_interval)
@@ -39,7 +37,9 @@ defmodule Remote.Users.UserServer do
   end
 
   # Returns a map that includes a list of users (limited to the number held in configuration)
-  # and with points greater than :max_number. The result includes the timestamp value set prior to
+  # and with points greater than :max_number.
+  #
+  # The result includes the timestamp value set prior to
   # it being updated for each call.
   #
   #  %{
@@ -59,9 +59,9 @@ defmodule Remote.Users.UserServer do
     {:reply, result, {%{state | timestamp: DateTime.utc_now()}, config}}
   end
 
-  @impl true
   #  Based on the update_interval the server will update the points value for all users to a random integer
   #  between the min and max range defined in the configuration (The second value in the state tuple).
+  @impl true
   def handle_info(:update_user_points, {state, config}) do
     case BuildQuery.update_all_users_points(config.max_num_range, config.min_num_range) do
       :ok ->
@@ -89,16 +89,24 @@ defmodule Remote.Users.UserServer do
     end
   end
 
+  # create the config to be stored in state
   defp build_configuration_from_opts(opts) do
     required_config = [:update_interval, :max_num_range, :min_num_range, :users_returned_limit]
+
     Enum.reduce(required_config, %{}, fn attr, acc ->
       Map.put(acc, attr, Access.get(opts, attr, get_default(attr)))
     end)
   end
 
-  defp get_default(:update_interval), do: Application.get_env(:remote, :update_interval) || 60_000
-  defp get_default(:max_num_range), do: Application.get_env(:remote, :max_num_range) || 100
-  defp get_default(:min_num_range), do: Application.get_env(:remote, :min_num_range) || 0
-  defp get_default(:users_returned_limit), do: Application.get_env(:remote, :users_returned_limit) || 2
+  defp get_default(:update_interval),
+    do: Application.get_env(:remote, :update_interval) || @update_interval
 
+  defp get_default(:max_num_range),
+    do: Application.get_env(:remote, :max_num_range) || @max_num_range
+
+  defp get_default(:min_num_range),
+    do: Application.get_env(:remote, :min_num_range) || @min_num_range
+
+  defp get_default(:users_returned_limit),
+    do: Application.get_env(:remote, :users_returned_limit) || @users_returned_limit
 end

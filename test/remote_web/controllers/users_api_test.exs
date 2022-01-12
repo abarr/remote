@@ -4,7 +4,6 @@ defmodule RemoteWeb.UserApiTest do
 
   import Remote.UsersFixtures
 
-
   describe "API Tests" do
     @default_limit 2
 
@@ -45,5 +44,4 @@ defmodule RemoteWeb.UserApiTest do
       assert timestamp_1 != timestamp_2
     end
   end
-
 end

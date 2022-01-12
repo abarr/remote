@@ -40,7 +40,7 @@ defmodule Remote.Users.BuildQuery do
     [
       """
       CREATE TABLE updated_users (id, points, inserted_at, updated_at) AS
-	      SELECT id, cast(floor(random() * (#{max} - #{min})) + #{min} AS integer) , inserted_at, now() at time zone 'utc'
+       SELECT id, cast(floor(random() * (#{max} - #{min})) + #{min} AS integer) , inserted_at, now() at time zone 'utc'
         FROM users;
       """,
       """
