@@ -5,11 +5,6 @@ defmodule Remote.Users.UserServer do
   alias Remote.Users.BuildQuery
   require Logger
 
-  @update_interval Application.get_env(:remote, :update_interval) || 60_000
-  @max_num_range Application.get_env(:remote, :max_num_range) || 100
-  @min_num_range Application.get_env(:remote, :min_num_range) || 0
-  @users_returned_limit Application.get_env(:remote, :users_returned_limit) || 2
-
   #  This GenServer starts with the following state:
   #   {
   #     %{
@@ -17,35 +12,23 @@ defmodule Remote.Users.UserServer do
   #       timestamp: nil
   #     },
   #     %{
-  #       update_interval: # The time set for calling schedule_update/1
-  #       max_num_range: # The max number in the range for generating random numbers
-  #       min_num_range: # The min number in the range for generating random numbers
-  #       users_returned_limit: # sets the limit for the number of users to return - defaults to 2
+  #       update_interval: he time set for calling schedule_update/1
+  #       max_num_range: The max number in the range for generating random numbers
+  #       min_num_range: The min number in the range for generating random numbers
+  #       users_returned_limit: sets the limit for the number of users to return - defaults to 2
   #     }
   #   }
   #
   def start_link(opts) do
-    name = Access.get(opts, :name, __MODULE__)
-    update_interval = Access.get(opts, :update_interval, @update_interval)
-    max_num_range = Access.get(opts, :max_num_range, @max_num_range)
-    min_num_range = Access.get(opts, :max_num_range, @min_num_range)
-    users_returned_limit = Access.get(opts, :max_num_range, @users_returned_limit)
-
     GenServer.start_link(
       __MODULE__,
-      %{
-        update_interval: update_interval,
-        max_num_range: max_num_range,
-        min_num_range: min_num_range,
-        users_returned_limit: users_returned_limit
-      },
-      name: name
+      build_configuration_from_opts(opts),
+      name: Access.get(opts, :name, __MODULE__)
     )
   end
 
   @impl true
   def init(config) do
-    Logger.info("#{__MODULE__} - successfully created")
     schedule_update(config.update_interval)
     {:ok, {%{max_number: Enum.random(0..100), timestamp: nil}, config}}
   end
@@ -107,4 +90,17 @@ defmodule Remote.Users.UserServer do
         {:error, "User query failed!"}
     end
   end
+
+  defp build_configuration_from_opts(opts) do
+    required_config = [:update_interval, :max_num_range, :min_num_range, :users_returned_limit]
+    Enum.reduce(required_config, %{}, fn attr, acc ->
+      Map.put(acc, attr, Access.get(opts, attr, get_default(attr)))
+    end)
+  end
+
+  defp get_default(:update_interval), do: Application.get_env(:remote, :update_interval) || 60_000
+  defp get_default(:max_num_range), do: Application.get_env(:remote, :max_num_range) || 100
+  defp get_default(:min_num_range), do: Application.get_env(:remote, :min_num_range) || 0
+  defp get_default(:users_returned_limit), do: Application.get_env(:remote, :users_returned_limit) || 2
+
 end

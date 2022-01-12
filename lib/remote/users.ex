@@ -7,11 +7,12 @@ defmodule Remote.Users do
   Returns a map with a list of users that have points greater than the
   max_number value held in system state (See Remote.Users.UserServer).
 
-  The results is limited to a configurable value that defaults to 2
+  The results are limited to a configurable value that defaults to 2
   (See Remote.Users.UserServer).
 
   A timestamp is included in the map that is the utc_datetime of the last
-  call made to the server.
+  call made to the server. The value of the timestamp will be nil until a
+  call is made.
 
   ## Examples
 

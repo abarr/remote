@@ -17,12 +17,6 @@ defmodule Remote.Users.BuildQuery do
     end)
   end
 
-  def get_table_row_count() do
-    all("users")
-    |> get_count()
-    |> Repo.one()
-  end
-
   defp all(user) do
     from(_u in user)
   end
@@ -40,11 +34,6 @@ defmodule Remote.Users.BuildQuery do
   defp user_to_map(query) do
     from q in query,
       select: %{id: q.id, points: q.points}
-  end
-
-  defp get_count(query) do
-    from q in query,
-      select: count(q.id)
   end
 
   defp update_sql(min, max) do
