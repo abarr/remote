@@ -1,7 +1,7 @@
 import Config
 
-# config :remote,
-# update_interval: 10_000
+config :remote,
+update_interval: 10_000
 # update_interval: 20_000
 # update_interval: 30_000
 

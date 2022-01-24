@@ -23,15 +23,26 @@ defmodule Remote.UserServerTest do
     end
 
     test "get state", %{user_server: user_server} do
-      assert {%{timestamp: nil}, %{update_interval: 10000}, []} =
-        GenServer.call(user_server, :get_state)
+      assert(
+      %{
+        config: %{
+          max_num_range: 100,
+          min_num_range: 0,
+          update_interval: 10000,
+          users_returned_limit: 2
+        },
+        values: %{
+          max_number: _num,
+          timestamp: nil
+        }
+      } = GenServer.call(user_server, :get_state))
     end
 
     test "get users limited by configuration and greater than max_number" do
       {:ok, server} =
         Remote.Users.UserServer.start_link(name: :timer_test, update_interval: 1_000)
 
-      {%{max_number: max_number}, _config, _cache} = GenServer.call(server, :get_state)
+      %{config: _config, values: %{max_number: max_number}} = GenServer.call(server, :get_state)
 
       {:ok, %{users: users}} = GenServer.call(server, :get_users_points_greater_than_max)
 
@@ -42,17 +53,5 @@ defmodule Remote.UserServerTest do
       end
     end
 
-    test "checks server state changes based on timer" do
-      {:ok, server} =
-        Remote.Users.UserServer.start_link(name: :timer_test, update_interval: 1_000)
-
-      {%{max_number: max_number}, _, _} = GenServer.call(server, :get_state)
-
-      :timer.sleep(1_000)
-
-      {%{max_number: new_max_number}, _, _} = GenServer.call(server, :get_state)
-
-      assert max_number != new_max_number
-    end
   end
 end
